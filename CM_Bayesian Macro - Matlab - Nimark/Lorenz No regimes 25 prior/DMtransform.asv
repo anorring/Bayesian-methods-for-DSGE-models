@@ -1,0 +1,22 @@
+%transform Doms and Morin data
+clear all
+
+load('DMgoodraw');
+load('DMbadraw');
+
+sampleDates=[1981.5:.25:2010.5];
+
+
+DMgood=[];
+for j=1981.5:.25:2010.5;
+    s=[];
+    
+    for t=1:length(DMgoodraw);
+    if DMgoodraw(t,1) >= j && DMgoodraw(t,1) < j+0.25;
+        s=[s DMgoodraw(t,2)];
+    
+    end
+    end
+    DMgood=[DMgood mean(s)];
+end
+        

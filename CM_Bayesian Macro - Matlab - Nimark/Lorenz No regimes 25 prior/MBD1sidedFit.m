@@ -1,0 +1,83 @@
+function MBD1sidedFit(M,N,a,b,e1,bindim,dimX,jlead1,jlead0,SigJ,theta,Z,ST,T,CPImean,NGDPmean,NonZeroCPI,NonZeroNGDP,maxsurv,H)
+
+% try
+    pp=M(:,:,2)*0;
+    for j=1:10;
+        pp=M(:,:,2)*pp*M(:,:,2)'+N(:,:,2)*N(:,:,2)';
+    end
+    X=zeros(dimX,T);
+    stick=theta(15); %Calvo parameter
+beta=theta(16); %discount rate
+delta=theta(10); %labour supply curvature
+
+lambda=(1-stick)*(1-stick*beta)/stick;
+
+    LL=0;
+    Rlag=theta(12)*Z(2,1);
+    Gr=[-1;-lambda+lambda*delta;]*theta(12)/(1-theta(12));
+    Gu=[-1;-lambda+lambda*delta;]/(1-theta(12));
+    ZZtilde=[];
+    ZZZ=[];
+    for t=1:T-1;
+        
+        %%
+        
+        s=ST(t:t+bindim-1)';
+        j=binvec2dec(s)+1;
+        
+        Fpi=ones(NonZeroCPI(t),1)*(theta(17)*a(:,:,jlead1(j)+1)*M(:,:,jlead1(j)+1)+...
+            (1-theta(17))*a(:,:,jlead0(j)+1)*M(:,:,jlead0(j)+1))*H;
+        Fny=ones(NonZeroNGDP(t),1)*(theta(17)*(a(:,:,jlead1(j)+1)+b(:,:,jlead1(j)+1))*M(:,:,jlead1(j)+1)*H+...
+            ((1-theta(17))*(a(:,:,jlead0(j)+1)+b(:,:,jlead0(j)+1))*M(:,:,jlead0(j)+1)*H)-b(:,:,j)*H);
+        
+        DD=[e1;
+            (1-theta(12))*theta(13)*a(:,:,j)+(1-theta(12))*theta(14)*b(:,:,j);
+            a(:,:,j);
+            b(:,:,j);
+            Fpi;
+            Fny;];
+        
+        ZZ=[Z(1:4,t);
+            Z(4:3+NonZeroCPI(t),t)-0.25*CPImean;
+            Z(maxsurv+4:maxsurv+3+NonZeroNGDP(t),t)-0.25*NGDPmean;];
+        
+        %         RRR=zeros(size(ZZ,1),size(ZZ,1));
+        RRR=[0.001,zeros(1,NonZeroCPI(t)+3+NonZeroNGDP(t));
+            0,theta(5),zeros(1,NonZeroCPI(t)+2+NonZeroNGDP(t)); 
+           
+            zeros(2,1),[Gr(2);Gr(1);]*theta(5), eye(2)*0.001,zeros(2,NonZeroCPI(t)+NonZeroNGDP(t));
+            zeros(NonZeroCPI(t),4),eye(NonZeroCPI(t))*((Fpi(1,:)*SigJ(:,:,j)*Fpi(1,:)')^0.5),zeros(NonZeroCPI(t),NonZeroNGDP(t));
+            zeros(NonZeroNGDP(t),NonZeroCPI(t)+4),eye(NonZeroNGDP(t))*((Fny(1,:)*SigJ(:,:,j)*Fny(1,:)')^0.5);];
+         
+        
+        Ztilde = ZZ-DD*M(:,:,j)*X(:,t);
+        Ztilde(2)=Ztilde(2)-theta(12)*Rlag;Rlag=Z(2,t);
+        Ztilde(3)=Ztilde(3)-Gr(2,1)*Rlag;
+        Ztilde(4)=Ztilde(4)-Gr(1,1)*Rlag;
+        PP=M(:,:,j)*pp*M(:,:,j)'+N(:,:,j)*N(:,:,j)';
+        OMEGA=DD*PP*DD'+RRR*RRR';
+        
+        ZZZ=[ZZZ ZZ(1:4,:)];
+        ZZtilde=[ZZtilde Ztilde(1:4,:)];
+        K=PP*DD'/OMEGA;
+        X(:,t+1)= M(:,:,j)*X(:,t)+K*Ztilde;
+        pp=PP-K*OMEGA*K';
+        
+        
+        
+    end
+    
+    
+    for j=1:4;
+    subplot(4,1,j);
+    plot(ZZZ(j,:)','r')
+    hold on
+    plot(ZZZ(j,:)'-ZZtilde(j,:)','k')
+    end
+    
+    
+% catch
+%    
+%     display('Not possible to compute Kalman innovations')
+% end
+% 
