@@ -30,13 +30,15 @@ A0=[1,0,0;0,b,0;0,s,1;];
 A1=[r,0,0;k,1,-k;0,s*f,1;];
 A=A0\A1;
 
-egen = abs(eig(A)) < cutoff;
+egen = abs(eig(A)) < cutoff; %%% defining the eigenvalues: does the model have a solution?
 
 n1=1; %Number of predetermined variables
 n2=2; % Number of jump variables
 n = n1 + n2; %Total number of variables
 
 %MatLab, complex generalized Schur decomposition
+%%% matlab cannot do the analytical Schur decomposition, but there is a
+%%% work-a-around using qz:
 [S,T,Qa,Z] = qz(eye(size(A)),A); %MatLab: I=Q'SZ' and A=Q'TZ'; Paul S:  I=QSZ' and A=QTZ',%but Q isn't used
 [S,T,Qa,Z] = reorder(S,T,Qa,Z);   % reordering of generalized eigenvalues, T(i,i)/S(i,i), in ascending order
 logcon = abs(diag(T)) <= (abs(diag(S))*cutoff);  %1 for stable eigenvalue
@@ -67,8 +69,8 @@ Zkt_1 = inv(Zkt);         %inverting
 Stt_1 = inv(Stt);
 
 
-M = real(Zkt*Stt_1*Ttt*Zkt_1);       %x1(t+1) = M*x1(t) + e(t+1)
-G = real(Zlt*Zkt_1) ;              %x2(t) = C*x1(t)
+M = real(Zkt*Stt_1*Ttt*Zkt_1);       %x1(t+1) = M*x1(t) + e(t+1), %%% should be equal to rho defined above
+G = real(Zlt*Zkt_1) ;              %x2(t) = C*x1(t), %%% a and b in the equation for inflation and output gap
 
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -86,7 +88,7 @@ G
 % Undetermined coefficents
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 tic
-deno=r+b*r-b*r*r-k*s*f+k*s*r-1;
+deno=r+b*r-b*r*r-k*s*f+k*s*r-1; %%% deno = denominator
 a=-k*(r-1)/deno;
 bb=-k*s*(f-r)/deno;
 toc
@@ -125,7 +127,7 @@ while DIFF > 0.00000001;
     c1=AS(2,2)/S(2,2);
     d1=AS(2,3)/S(2,2);
 
-    DIFF=max(abs([c0 d0]-[c1 d1]));
+    DIFF=max(abs([c0 d0]-[c1 d1])); %%% c0 is a initial guess
     resc=[resc c0];
     resd=[resd d0];
 
@@ -149,7 +151,7 @@ C(2:3)
 % convergence rate
 figure
 subplot(2,1,1);plot(resc);
-legend('c(s)','fontsize',16);
+%legend('c(s)','Fontsize',16);
 subplot(2,1,2);plot(resd);
-legend('d(s)','fontsize',16);
-title('Speed of convergence', 'fontsize',24)
+%legend('d(s)','Fontsize',16);
+title('Speed of convergence', 'Fontsize',24)
