@@ -123,7 +123,11 @@ while DIFF > 0.00000001;
     C=A0\[1,0,0;]';
 
 
-    S=dlyap(A,C*C'); %S is unconditional covariance of state 
+    S=dlyap(A,C*C'); %S is unconditional covariance of state
+    % a second way to do this: fsolve solves a linear equation
+    % S=fsolve(@(S) S-A*S*A'-C*C',eye(3)); 
+    
+    % compute E[X(t)*X(t+1)']
     AS=A*S;
 
     c1=AS(2,2)/S(2,2);

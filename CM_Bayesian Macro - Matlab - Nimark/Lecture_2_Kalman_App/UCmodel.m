@@ -97,10 +97,10 @@ CC=[C,0;];
 RR=[0,R;];
 [Xsmooth]=smooth(A,CC,D,RR,Z);
 
-figure(2)
+figure(2) % there's a typo here somewhere, Sarah will check it
 plot(Xtt(2:end),'linewidth',2,'linestyle','-')
 hold on
-plot(Xsmooth(2:end),'linewidth',2,'linestyle','--','color','g')
+plot(Xsmooth(1:end),'linewidth',2,'linestyle','--','color','g')
 legend('\tau_{t|t}','\tau_{t|T}')
 
 [M,L,U]=distplot(A,CC,D,RR,Z,0.95,0.05,100,1,0);

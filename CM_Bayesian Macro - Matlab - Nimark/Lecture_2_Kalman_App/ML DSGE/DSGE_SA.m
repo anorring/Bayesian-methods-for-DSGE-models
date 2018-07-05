@@ -25,10 +25,10 @@ UB=[1,10,1,1,5,1*ones(1,4);]';%Upper bound for parameter vector
 x=theta;
 
 % x=THETA;
-sa_t= 5;
-sa_rt=.3;
-sa_nt=5;
-sa_ns=5;
+sa_t= 5; % initial temperature
+sa_rt=.3; % temperature reduction factor
+sa_nt=5; % number of draws before the change in tempreature
+sa_ns=5; % number of draws before a step size adjustement (making the grid finer)
 % warning off all;
 
 [xhat]=simannb( 'LLDSGE', x, LB, UB, sa_t, sa_rt, sa_nt, sa_ns, 1);
