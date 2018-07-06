@@ -25,7 +25,7 @@ pmean=0.99; pstdd=0.05;
 a = (1-pmean)*pmean^2/pstdd^2 - pmean;
 b = a*(1/pmean - 1);
 
-LP = LP + lpdfBeta(theta(4),a,b);
+LP = LP + lpdfBeta(theta(4),a,b); %log prior
 
 % 
 %(5) f - coefficient on inflation in Taylor rule

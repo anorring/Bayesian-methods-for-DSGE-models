@@ -3,13 +3,14 @@ clc
 clear all
 close all
 global Z
+%load data for FFR, CPI and GDP
 load('Z');
 %--------------------------------------------------------------------------
 % Set control parameters
 %--------------------------------------------------------------------------
 
 %Number of draws
-J=1e4;
+J=4*1e4;
 epseye=1e-4;
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -17,14 +18,14 @@ epseye=1e-4;
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 r=0.95; %productivity persistence
 g=3; %relative risk aversion
-d=0.75; %Calvo parameter
+d=0.75; %Calvo parameter (price stickyness)
 b=0.99;   %discount factor
 k=((1-d)*(1-d*b))/d; %slope of Phillips curve
-f=1.5;% coefficient on inflation in Taylor rule
+f=1.5;% coefficient on inflation in Taylor rule (phi)
 sigx=0.1;% s.d. prod shock
 sigy=0.1;% s.d. demand shock
 sigp=0.1;% s.d. cost push shock
-sigr=0.1;% s.d. cost push shock
+sigr=0.1;% s.d. mp shock
 
 
 theta=[r,g,d,b,f,sigx,sigy,sigp,sigr]';%Starting value for parameter vector
@@ -40,9 +41,11 @@ x=theta;
 
 %Initializes the proposal variance.
 %Set up so that the first candidate draw is always accepted
+%(i.e. set a very low log-likelihood so lpostcan-lpostdraw will be large
+% and the first draw will be accepted)
 lpostdraw = -9e+200;
 bdraw=x;
-% initial guess for the var-cov matrix of the proposal density
+%initial guess for the var-cov matrix of the proposal density
 vscale=diag(abs(theta))*epseye+1e-5*eye(length(x));
 
 
@@ -73,32 +76,43 @@ for iter=1:J
     if min(bcan > LB)==1
         if min(bcan < UB)==1
 %             lpostcan = LLDSGE(bcan);%Uncomment for improper uniform priors
+
+    % compute logposterior associated with the draw
             lpostcan = log_prior_DSGE(bcan)+LLDSGE(bcan);%switch on for use of priors
 %               lpostcan = log_prior_DSGE(bcan);%Uncomment for prior predictive analysis
             laccprob = lpostcan-lpostdraw;
-        else
+   % if the draw is outside the boundaries,
+   % fix very low alpha so that the draw is rejected       
+        else 
             laccprob=-9e+200;
+            %count one more not accepted draw
             q=q+1;
         end
     else
         laccprob=-9e+200;
+        %count one more not accepted draw
         q=q+1;
     end
     
     %Accept candidate draw with log prob = laccprob, else keep old draw
+    
     if log(rand)<laccprob
         lpostdraw=lpostcan;
         bdraw=bcan;
+        %count one more accepted draw
         pswitch=pswitch+1;
     end
-    
+    %store the accepted draw, if the draw was not accepted store the
+    %previous one
     bb_(:,iter)=bdraw;
-    
+    %proportion of not accepted draws
     OutsideProp(iter)=q/iter;
+    %proportion of accepted draws
     SwitchesProp(iter)=pswitch/iter;
     
+    % reduce var-cov matrix of the proposal density every 1000 iterations
     if iter >= 50 && mod(iter,1000)==0
-        vscale=5e-4*cov(bb_(:,1:iter)'); % different values for 4, try e.g. 1
+        vscale=5e-4*cov(bb_(:,1:iter)');
         iter
     end
     
@@ -108,16 +122,17 @@ toc
 disp(['iter: ',num2str(iter)]);
 disp(['acceptance rate: ',num2str(SwitchesProp(iter))]);
 
+%plot distribution of draws (excluding the first 50)
 figure
 bb_=bb_(:,50:end);
 for j=1:8;
     subplot(3,3,j);
     hist(bb_(j,:),50);
 end
-
+%plot variances of accepted draws to check convergence
 convcheck(bb_(:,100:end));
 
-% figure
+% plot the posterior distribution of the 
 plotpost(bb_,0)
 %%
 % %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
