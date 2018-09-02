@@ -9,7 +9,7 @@ close all
 
 %Number of draws
 S=1e5;%Number of draws in MCMC
-J=300;%Number of draws from MCMC used to simulate posterior functions of theta
+J=300;%Number of draws from MCMC used to simulate posterior functions of theta, saved
 USdata=1; %Set to 1 to use US data on inflation and fed funds rate, 0 to use artifical data
 epseye=5e-1; %scale up or down to tune acceptance ratio
 adaptive=1; %set to 1 to use adaptive proposal density

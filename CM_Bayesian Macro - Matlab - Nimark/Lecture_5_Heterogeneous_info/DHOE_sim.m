@@ -1,4 +1,4 @@
-%DHOE_sim_and_estimate
+%DHOE_sim_and_estimate, simulates the data
 clc
 clear var;
 close all;
